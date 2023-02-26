@@ -15,7 +15,7 @@ namespace API.Controllers
             _context = context;
         }
 
-        [HttpGet(Name ="GetBasket")]
+        [HttpGet(Name = "GetBasket")]
         public async Task<ActionResult<BasketDto>> GetBasket()
         {
             Basket basket = await RetrieveBasket();
@@ -31,14 +31,14 @@ namespace API.Controllers
             Basket basket = await RetrieveBasket();
             if (basket == null) basket = CreateBasket();
             var product = await _context.Products.FindAsync(productId);
-            if (product == null) return NotFound();
+            if (product == null) return BadRequest(new ProblemDetails { Title = "Product not found" });
             basket.AddItem(product, quantity);
 
             var result = await _context.SaveChangesAsync() > 0;
-            
+
             if (result) return CreatedAtRoute("GetBasket", MapBaskerToDto(basket));
 
-            return BadRequest(new ProblemDetails{Title = "Problem saving item to basket"});
+            return BadRequest(new ProblemDetails { Title = "Problem saving item to basket" });
         }
 
         [HttpDelete]
@@ -49,10 +49,10 @@ namespace API.Controllers
             basket.RemoveItem(productId, quantity);
 
             var result = await _context.SaveChangesAsync() > 0;
-            
+
             if (result) return Ok();
-            
-            return BadRequest(new ProblemDetails{Title = "Problem removing item from basket"});
+
+            return BadRequest(new ProblemDetails { Title = "Problem removing item from basket" });
         }
 
         private async Task<Basket> RetrieveBasket()
@@ -66,9 +66,9 @@ namespace API.Controllers
         private Basket CreateBasket()
         {
             var buyerId = Guid.NewGuid().ToString();
-            var cookieOptions = new CookieOptions{IsEssential = true, Expires = DateTime.Now.AddDays(30)};
+            var cookieOptions = new CookieOptions { IsEssential = true, Expires = DateTime.Now.AddDays(30) };
             Response.Cookies.Append("buyerId", buyerId, cookieOptions);
-            var basket = new Basket{BuyerId = buyerId};
+            var basket = new Basket { BuyerId = buyerId };
             _context.Baskets.Add(basket);
             return basket;
         }
